@@ -1,2 +1,2 @@
-# GoogleTrendsItaly
+# R-GoogleTrendsItaly
 R Shiny + flexdashboard
