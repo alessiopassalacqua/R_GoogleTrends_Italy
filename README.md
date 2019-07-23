@@ -2,7 +2,7 @@
 
 ## Motivation
 
-This demo app will demonstrate how it is possible to combine the best of modern R &#x1F4E6; packages to create interactive web applications at zero cost and without HTML, CSS, or JavaScript knowledge (like me).
+This demo app demonstrates how it is possible to combine the best of modern R &#x1F4E6; packages to create interactive web applications at zero cost and without HTML, CSS, or JavaScript knowledge.
 
 ## Link
 
