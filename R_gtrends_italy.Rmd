@@ -1,0 +1,177 @@
+---
+title: "Google trends Italy"
+author: "Alessio Passalacqua"
+output: 
+  flexdashboard::flex_dashboard:
+    orientation: columns
+    social: menu
+    source_code: embed
+runtime: shiny
+---
+
+Column {.sidebar}
+-----------------------------------------------------------------------
+
+```{r global, include=FALSE}
+library(highcharter)
+library(gtrendsR)
+library(lubridate)
+library(dplyr)
+library(stringr)
+library(viridisLite)
+library(forecast)
+
+thm <- 
+  hc_theme(
+    colors = c("#1a6ecc", "#434348", "#90ed7d"),
+    chart = list(
+      backgroundColor = "transparent",
+      style = list(fontFamily = "Source Sans Pro")),
+    xAxis = list( gridLineWidth = 1)
+  )
+
+map_ita <- readRDS("map_ita_json.RDS")
+```
+
+```{r}
+# Input widget
+
+textInput("text",
+          h3("Enter an italian search term like 'pomodoro'"),
+          value = "")  
+h3("Press 'Go'")
+actionButton("button", "Go")
+```
+
+
+&nbsp;
+<hr />
+<p style="text-align: center;">by <a href="https://alessiopassalacqua.updog.co/">Alessio Passalacqua</a></p>
+<p style="text-align: center;"><span style="color: #808080;"><em>alessio.passalacqua@gmail.com</em></span></p>
+
+<!-- Add icon library -->
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
+
+<!-- Add font awesome icons -->
+<p style="text-align: center;">
+    <a href="https://twitter.com/alessiopassah2o" class="fa fa-twitter"></a>
+    <a href="https://www.linkedin.com/in/alessiopassalacqua/" class="fa fa-linkedin"></a>
+    <a href="https://github.com/alessiopassalacqua" class="fa fa-github"></a>
+</p>
+
+&nbsp;
+
+
+```{r}
+# shiny reactive object
+gtrends_rct <- eventReactive(input$button,{
+# google trends query
+gtrends(input$text,
+        geo="IT",
+        gprop = "web",
+        time="today+5-y")
+})
+```
+
+Column {data-width=600}
+-----------------------------------------------------------------------
+
+### Trends over time
+
+```{r}
+renderHighchart({
+# interest over the time, month average  
+gp <- 
+  gtrends_rct()$interest_over_time %>%  
+  select(date,hits) %>%
+  mutate(year = year(date)) %>%
+  mutate(month = month(date,label=T) ) %>%
+  group_by(year,month) %>%
+    summarise(hits = mean(hits)) 
+
+sm <- gp$month[1] # starting month 
+
+sy <- gp$year[1] # starting year
+
+gtrends_ts<- ts(gp$hits,start=c(sy,sm),freq=12)
+
+# time series plot + forecast
+gtrends_ts %>% 
+  forecast(level = 90) %>% 
+  hchart() %>% 
+  hc_add_theme(thm)
+})
+```
+
+
+Column {width=300}
+-----------------------------------------------------------------------
+
+### Interest by city
+
+```{r}
+renderHighchart({
+top_city <- 
+  gtrends_rct()$interest_by_city %>%
+  select(location,hits) %>%
+  arrange(desc(hits)) %>%
+  slice(1:10) 
+
+highchart() %>% 
+  hc_chart(type = "bar") %>% 
+  hc_title(text = "") %>% 
+  hc_xAxis(categories = top_city$location) %>% 
+  hc_add_series(data = top_city$hits,
+                name = "hits")
+})
+```
+
+
+Column {width=400}
+-----------------------------------------------------------------------
+
+### Regional interest
+
+```{r}
+renderHighchart({
+
+gtrends_hmap <-
+  gtrends_rct()$interest_by_region %>%
+  select(location,hits) %>%
+  mutate(location = str_replace(.$location, "Tuscany", "toscana")) %>%
+  mutate(location = str_replace(.$location, "Sicily", "sicilia")) %>%
+  mutate(location = str_replace(.$location, "Lombardy", "lombardia")) %>%
+  mutate(location = str_replace(.$location, "Piedmont", "piemonte")) %>%
+  mutate(location = str_replace(.$location, "Sardinia", "sardegna")) %>%
+  mutate(location = str_replace(.$location, "Apulia", "puglia")) %>%
+  mutate(location = str_replace(.$location, "Aosta", "valle d'aosta")) %>%
+  mutate(location = str_replace(.$location, "Trentino-Alto Adige/South Tyrol",
+                                "trentino-alto adige/sudtirol")) %>%
+  mutate(location = str_replace(.$location, "Friuli-Venezia Giulia", 
+                                  "friuli venezia giulia")) %>%
+  mutate(location = str_to_lower(.$location)) %>%
+  rename(name =location) 
+
+
+n <- 4
+stops <- data.frame(q = 0:n/n,
+                    c = substring(viridis(n + 1), 0, 7)[(n+1):1],
+                    stringsAsFactors = FALSE)
+stops <- list_parse2(stops)
+
+highchart(type = "map") %>% 
+  hc_add_series_map(map = map_ita, df = gtrends_hmap, joinBy = "name", 
+                    value = "hits",
+                    name="Hits") %>%
+hc_colorAxis(stops= stops,min=min(gtrends_hmap$hits)) %>%
+hc_legend(valueDecimals = 0, valueSuffix = "%") %>%
+  hc_mapNavigation(enabled = TRUE) %>%
+  hc_add_theme(thm)
+})
+```
+
+
+
+
+
+
