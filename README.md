@@ -35,7 +35,7 @@ an appropriate time series model, estimate the parameters and compute the foreca
 
 * &#x1F4C4; 1 file
 * &#x1F55A; 1 day of work (starting from tutorials of one of my courses)
-* &#x270D; 130 lines of code
+* &#x270D; 150 lines of code
 * &#x1F6BF; 30 %>% pipe
 * &#x1F939; 100% fun
 
