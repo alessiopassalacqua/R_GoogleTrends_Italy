@@ -9,8 +9,9 @@ output:
 runtime: shiny
 ---
 
-Column {.sidebar}
------------------------------------------------------------------------
+Sidebar {.sidebar}
+=======================================================================
+
 
 ```{r global, include=FALSE}
 library(highcharter)
@@ -20,6 +21,7 @@ library(dplyr)
 library(stringr)
 library(viridisLite)
 library(forecast)
+library(DT)
 
 thm <- 
   hc_theme(
@@ -33,6 +35,8 @@ thm <-
 map_ita <- readRDS("map_ita_json.RDS")
 data("usgeojson")
 ```
+
+
 
 ```{r}
 # Input widget
@@ -116,21 +120,9 @@ name_input <- "woename"
 }   
 })
 
-
-
-
-
-```
-
-Column {data-width=600}
------------------------------------------------------------------------
-
-### Trends over time
-
-```{r}
-renderHighchart({
 # interest over the time, month average  
-gp <- 
+ts_rct <- eventReactive(input$button,{
+gp <-  
   gtrends_rct()$interest_over_time %>%  
   select(date,hits) %>%
   mutate(year = year(date)) %>%
@@ -142,15 +134,38 @@ sm <- gp$month[1] # starting month
 
 sy <- gp$year[1] # starting year
 
-gtrends_ts<- ts(gp$hits,start=c(sy,sm),freq=12)
+ts(gp$hits,start=c(sy,sm),freq=12)
 
+})
+
+
+data_forecast_rct <- eventReactive(input$button,{
+ts_rct() %>% 
+  forecast(level = 90) %>%
+  data.frame() %>%
+  mutate(date = row.names(.)) %>%
+  select(date,everything())  
+  })
+```
+
+Dashboard
+=======================================================================
+
+Column {data-width=600}
+-----------------------------------------------------------------------
+
+### Trends over time
+
+```{r}
+renderHighchart({
 # time series plot + forecast
-gtrends_ts %>% 
+ts_rct() %>% 
   forecast(level = 90) %>% 
   hchart() %>% 
   hc_add_theme(thm)
 })
 ```
+
 
 
 Column {width=300}
@@ -205,8 +220,16 @@ hc_legend(valueDecimals = 0, valueSuffix = "%") %>%
 })
 ```
 
+Download Forescat
+=======================================================================
 
-
-
-
+```{r}
+renderDataTable(
+  data_forecast_rct(), 
+  extensions = 'Buttons', 
+    options = list(
+    dom = 'Bfrtip',
+    buttons = c('copy', 'csv', 'excel', 'pdf', 'print')
+  ))
+```
 

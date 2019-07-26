@@ -31,11 +31,13 @@ an appropriate time series model, estimate the parameters and compute the foreca
 
 * &#x1F4C8; `{gtrendsR}` provides an interface for retrieving and displaying Google Trends information.
 
+* &#x1F4DD; `{DT}` provides a R interface to the JavaScript library DataTables. R data objects (matrices or data frames) can be displayed as tables on HTML pages, and DataTables provides filtering, pagination, sorting, and many other features in the tables.
+
 ## Numbers
 
 * &#x1F4C4; 1 file
 * &#x1F55A; 1 day of work (starting from tutorials of one of my courses)
-* &#x270D; 150 lines of code
+* &#x270D; 200 lines of code
 * &#x1F6BF; 30 %>% pipe
 * &#x1F939; 100% fun
 
