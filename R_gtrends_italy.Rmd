@@ -220,14 +220,18 @@ hc_legend(valueDecimals = 0, valueSuffix = "%") %>%
 })
 ```
 
-Download Forescat
+Download Forecast Data
 =======================================================================
+
+Row {data-height=1200}
+-------------------------------------
 
 ```{r}
 renderDataTable(
   data_forecast_rct(), 
   extensions = 'Buttons', 
     options = list(
+    pageLength = 24,
     dom = 'Bfrtip',
     buttons = c('copy', 'csv', 'excel', 'pdf', 'print')
   ))
