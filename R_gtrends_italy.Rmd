@@ -1,5 +1,5 @@
 ---
-title: "Google trends Italy"
+title: "Google trends US/Italy"
 author: "Alessio Passalacqua"
 output: 
   flexdashboard::flex_dashboard:
@@ -31,13 +31,18 @@ thm <-
   )
 
 map_ita <- readRDS("map_ita_json.RDS")
+data("usgeojson")
 ```
 
 ```{r}
 # Input widget
 
+selectInput("nation", 
+            h3("Choose US or IT"), 
+            choices = list("IT" = "IT", "US"= "US"), 
+            selected = 1)
 textInput("text",
-          h3("Enter an italian search term like 'pomodoro'"),
+          h3("Enter search term like 'pomodoro' (IT) or 'tomato' (US)"),
           value = "")  
 h3("Press 'Go'")
 actionButton("button", "Go")
@@ -63,14 +68,58 @@ actionButton("button", "Go")
 
 
 ```{r}
-# shiny reactive object
+# shiny reactive objects
 gtrends_rct <- eventReactive(input$button,{
 # google trends query
 gtrends(input$text,
-        geo="IT",
+        geo=input$nation,
         gprop = "web",
         time="today+5-y")
 })
+
+
+gtrends_hmap_rct <-eventReactive(input$button,{
+if(input$nation== "IT"){
+gtrends_hmap <-
+  gtrends_rct()$interest_by_region %>%
+  select(location,hits) %>%
+  mutate(location = str_replace(.$location, "Tuscany", "toscana")) %>%
+  mutate(location = str_replace(.$location, "Sicily", "sicilia")) %>%
+  mutate(location = str_replace(.$location, "Lombardy", "lombardia")) %>%
+  mutate(location = str_replace(.$location, "Piedmont", "piemonte")) %>%
+  mutate(location = str_replace(.$location, "Sardinia", "sardegna")) %>%
+  mutate(location = str_replace(.$location, "Apulia", "puglia")) %>%
+  mutate(location = str_replace(.$location, "Aosta", "valle d'aosta")) %>%
+  mutate(location = str_replace(.$location, "Trentino-Alto Adige/South Tyrol",
+                                "trentino-alto adige/sudtirol")) %>%
+  mutate(location = str_replace(.$location, "Friuli-Venezia Giulia", 
+                                  "friuli venezia giulia")) %>%
+  mutate(location = str_to_lower(.$location))
+} else {
+  gtrends_rct()$interest_by_region  
+} 
+})
+  
+map_json_rct  <-eventReactive(input$button,{
+if(input$nation == "IT"){
+map_json <- map_ita  
+} else {
+map_json <- usgeojson  
+}   
+})
+
+name_input_rct <-eventReactive(input$button,{
+if(input$nation == "IT"){
+name_input <- "name"  
+} else {
+name_input <- "woename"  
+}   
+})
+
+
+
+
+
 ```
 
 Column {data-width=600}
@@ -135,22 +184,6 @@ Column {width=400}
 ```{r}
 renderHighchart({
 
-gtrends_hmap <-
-  gtrends_rct()$interest_by_region %>%
-  select(location,hits) %>%
-  mutate(location = str_replace(.$location, "Tuscany", "toscana")) %>%
-  mutate(location = str_replace(.$location, "Sicily", "sicilia")) %>%
-  mutate(location = str_replace(.$location, "Lombardy", "lombardia")) %>%
-  mutate(location = str_replace(.$location, "Piedmont", "piemonte")) %>%
-  mutate(location = str_replace(.$location, "Sardinia", "sardegna")) %>%
-  mutate(location = str_replace(.$location, "Apulia", "puglia")) %>%
-  mutate(location = str_replace(.$location, "Aosta", "valle d'aosta")) %>%
-  mutate(location = str_replace(.$location, "Trentino-Alto Adige/South Tyrol",
-                                "trentino-alto adige/sudtirol")) %>%
-  mutate(location = str_replace(.$location, "Friuli-Venezia Giulia", 
-                                  "friuli venezia giulia")) %>%
-  mutate(location = str_to_lower(.$location)) %>%
-  rename(name =location) 
 
 
 n <- 4
@@ -160,10 +193,12 @@ stops <- data.frame(q = 0:n/n,
 stops <- list_parse2(stops)
 
 highchart(type = "map") %>% 
-  hc_add_series_map(map = map_ita, df = gtrends_hmap, joinBy = "name", 
+  hc_add_series_map(map = map_json_rct(), 
+                    df = gtrends_hmap_rct(), 
+                    joinBy = c(name_input_rct(),"location"), 
                     value = "hits",
                     name="Hits") %>%
-hc_colorAxis(stops= stops,min=min(gtrends_hmap$hits)) %>%
+hc_colorAxis(stops= stops,min=min(gtrends_hmap_rct()$hits)) %>%
 hc_legend(valueDecimals = 0, valueSuffix = "%") %>%
   hc_mapNavigation(enabled = TRUE) %>%
   hc_add_theme(thm)
