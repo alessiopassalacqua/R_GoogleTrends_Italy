@@ -34,21 +34,24 @@ thm <-
 
 map_ita <- readRDS("map_ita_json.RDS")
 data("usgeojson")
+data("categories")
 ```
 
 
 
 ```{r}
 # Input widget
-
 selectInput("nation", 
-            h3("Choose US or IT"), 
+            h4("1. Choose US or IT"), 
             choices = list("IT" = "IT", "US"= "US"), 
             selected = 1)
 textInput("text",
-          h3("Enter search term like 'pomodoro' (IT) or 'tomato' (US)"),
+          h4("2. Enter search term"),
           value = "")  
-h3("Press 'Go'")
+selectInput("category", label = h4("3. Select category"), 
+    choices = categories$name, 
+    selected = "All categories")
+h4("Press 'Go'")
 actionButton("button", "Go")
 ```
 
@@ -78,6 +81,7 @@ gtrends_rct <- eventReactive(input$button,{
 gtrends(input$text,
         geo=input$nation,
         gprop = "web",
+        category= categories[categories$name==input$category,"id"],
         time="today+5-y")
 })
 
