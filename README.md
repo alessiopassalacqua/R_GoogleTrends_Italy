@@ -4,10 +4,32 @@
 
 This demo app demonstrates how it is possible to combine the best of modern R &#x1F4E6; packages to create interactive web applications at zero cost and without HTML, CSS, or JavaScript knowledge.
 
+## The App: Google Trends Italy/US
+
+Based on search term, the app takes data from google trends and shows results about Italy or US depending on the user selection.
+
+These are the two main pages:
+
+**Dashboard**
+
+* Trends over the time and forecasting
+* Interest by city (top ten)
+* Regional Interest
+
+**Download Forecast Data**
+
+
 ## Link
 
 * &#x1F431; [github repository](https://github.com/alessiopassalacqua/R_GoogleTrends_Italy)
 * &#x2728; [live app](https://alessiopassalacqua.shinyapps.io/R_gtrends_italy/)
+
+
+## History Version
+
+1. Google trends Italy
+2. Added google trends US
+3. Added Download Forecast Data
 
 
 ## R Packages
